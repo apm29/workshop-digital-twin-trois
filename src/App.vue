@@ -37,7 +37,7 @@
           cast-shadow
         />
         <DirectionalLight
-          color="#FF3533"
+          color="#FFFFFF"
           :position="{ x: 0, y: 1, z: 0 }"
           cast-shadow
           :shadowMapSize="{
@@ -45,7 +45,7 @@
             height: 2048,
           }"
         />
-        <PointLight :position="{ y: 50, z: 50 }" />
+        <PointLight :position="{ x: 1, y: 1, z: 1 }" />
         <!-- sky -->
         <Mesh>
           <ShaderMaterial
@@ -68,7 +68,7 @@
           />
           <SphereGeometry :radius="4000" :width-segments="32" :height-segments="16" />
         </Mesh>
-        <!-- ground -->
+        <!-- ground grass -->
         <Mesh
           :position="{
             y: 0,
@@ -83,10 +83,26 @@
             <Texture src="/textures/grass.jpeg" :onLoad="configGroundTexture" />
           </BasicMaterial>
         </Mesh>
+        <!-- ground cement -->
+        <Mesh
+          :position="{
+            y: 0.01,
+          }"
+          :rotation="{
+            x: -Math.PI / 2,
+          }"
+          receive-shadow
+        >
+          <PlaneGeometry :width="20" :height="20" />
+          <BasicMaterial>
+            <Texture src="/textures/cement.jpeg" />
+          </BasicMaterial>
+        </Mesh>
         <!-- Model -->
         <Group ref="selectableGroupRef">
           <GltfModel
             @click="onPointerEvent"
+            @load="onModelReady"
             src="/model/储料桶.glb"
             :position="{
               x: 0.05,
@@ -100,14 +116,17 @@
           <GltfModel
             src="/model/给料槽.glb"
             @click="onPointerEvent"
+            @load="onModelReady"
             :position="{
-              x: 5,
+              x: 3,
               y: 0,
+              z: 0.6,
             }"
           />
           <GltfModel
             src="/model/给料电机.glb"
             @click="onPointerEvent"
+            @load="onModelReady"
             :position="{
               x: 0,
               y: 1,
@@ -117,6 +136,7 @@
           <GltfModel
             src="/model/给料螺旋.glb"
             @click="onPointerEvent"
+            @load="onModelReady"
             :position="{
               x: 0,
               y: 0,
@@ -131,6 +151,7 @@
         <!-- <UnrealBloomPass :strength="1" /> -->
         <!-- <HalftonePass :radius="1" :scatter="0" /> -->
         <FXAAPass />
+        <EffectPass />
       </EffectComposer>
     </Renderer>
   </div>
@@ -145,6 +166,7 @@ import {
   EffectComposer,
   UnrealBloomPass,
   FXAAPass,
+  EffectPass,
   RenderPass,
   Mesh,
   GltfModel,
@@ -183,9 +205,7 @@ onMounted(() => {
   scene.fog = new THREE.Fog(0xffffff, 1, 500);
 
   //render循环
-  rendererRef.value.onBeforeRender(() => {
-    composer.render();
-  });
+  rendererRef.value.onBeforeRender(() => {});
 
   //选择时outline效果
   const moveOutlinePass = new OutlinePass(
@@ -210,8 +230,19 @@ onMounted(() => {
   moveOutlinePassRef.value = moveOutlinePass;
 });
 
-function onPointerOver({ type, over, component, intersect }) {
-  console.log(1, type, over, intersect);
+function onPointerOver({ type, over, component, intersect }) {}
+
+function onModelReady(model) {
+  if (model.scene.traverse) {
+    model.scene.traverse((o) => {
+      if (o.isMesh) {
+        // handle both multiple and single materials
+        const asArray = Array.isArray(o.material) ? o.material : [o.material];
+        // 0 works for matte materials - change as needed
+        asArray.forEach((mat) => (mat.metalness = 0.1));
+      }
+    });
+  }
 }
 
 const intersects = reactive([]);
@@ -220,6 +251,7 @@ function onPointerEvent({ component, intersect }) {
   if (intersects.length === 0) {
     setTimeout(() => {
       moveOutlinePassRef.value.selectedObjects = [intersects[0]];
+      console.log(intersects[0]);
       intersects.splice(0, intersects.length);
     }, 200);
   }
