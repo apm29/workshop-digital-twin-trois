@@ -1,156 +1,211 @@
 <template>
   <div ref="wrapperRef" style="width: 100vw; height: 100vh">
-    <Renderer
-      ref="rendererRef"
-      antialias
-      alpha
-      :orbit-ctrl="{
-        enableDamping: true,
-        enablePan: true,
-        dampingFactor: 0.05,
-        screenSpacePanning: false,
-        minDistance: 0.1,
-        maxDistance: 1000,
-        maxPolarAngle: (Math.PI / 2 / 90) * 85,
-      }"
-      :pointer="{ intersectRecursive: true }"
-      shadow
-      :resize="true"
-    >
-      <Camera
-        ref="cameraRef"
-        :position="{ z: 10, x: 2, y: 5 }"
-        :fov="75"
-        :near="0.1"
-        :far="5000"
-      />
+    <Renderer ref="rendererRef" antialias alpha :orbit-ctrl="{
+      enableDamping: true,
+      enablePan: true,
+      dampingFactor: 0.05,
+      screenSpacePanning: false,
+      minDistance: 0.1,
+      maxDistance: 1000,
+      maxPolarAngle: (Math.PI / 2 / 90) * 85,
+    }" :pointer="{ intersectRecursive: true }" shadow :resize="true">
+      <Camera ref="cameraRef" :position="{ z: 10, x: 2, y: 5 }" :fov="75" :aspect="wrapperWidth / wrapperHeight"
+        :near="0.1" :far="5000" />
       <!-- <Raycaster
         intersect-mode="frame"
         @pointerEnter="onPointerOver"
         @click="onPointerEvent"
       /> -->
       <Scene ref="sceneRef" background="#030303">
-        <HemisphereLight
-          color="#FF3533"
-          groundColor="#FF8080"
-          :position="{ x: 0, y: 50, z: 0 }"
-          cast-shadow
-        />
-        <DirectionalLight
-          color="#FFFFFF"
-          :position="{ x: 0, y: 1, z: 0 }"
-          cast-shadow
+        <AmbientLight color="#808080" :position="{ x: 0, y: 20, z: 0 }" />
+        <DirectionalLight ref="directionalLightRef" cast-shadow color="#ffffff" :position="{ x: 100, y: 300, z: 100 }"
           :shadowMapSize="{
-            width: 2048,
-            height: 2048,
-          }"
-        />
-        <PointLight :position="{ x: 1, y: 1, z: 1 }" />
+            width: 512,
+            height: 512,
+          }" />
+        <!-- <PointLight ref="pointLightRef" :shadow-map-size="{ width: 1024, height: 1024 }"
+          :position="{ x: 0, y: 500, z: 0 }" />
+        <PointLight :position="{ y: 50, x: 0 }" :shadow-map-size="{ width: 1024, height: 1024 }" /> -->
         <!-- sky -->
         <Mesh>
-          <ShaderMaterial
-            :props="{
-              uniforms: {
-                topColor: { value: new THREE.Color(0x0077ff) },
-                bottomColor: { value: new THREE.Color(0xffffff) },
-                offset: { value: 33 },
-                exponent: { value: 0.6 },
-              },
-              vertexShader: `varying vec3 vWorldPosition; void main() { vec4 worldPosition = modelMatrix * vec4(
-      position, 1.0 ); vWorldPosition = worldPosition.xyz; gl_Position = projectionMatrix
-      * modelViewMatrix * vec4( position, 1.0 ); }`,
-              fragmentShader: ` uniform vec3 topColor; uniform vec3 bottomColor; uniform float offset; uniform float
-      exponent; varying vec3 vWorldPosition; void main() { float h = normalize(
-      vWorldPosition + offset ).y; gl_FragColor = vec4( mix( bottomColor, topColor, max(
-      pow( max( h , 0.0), exponent ), 0.0 ) ), 1.0 ); }`,
-              side: THREE.BackSide,
-            }"
-          />
+          <ShaderMaterial :props="{
+            uniforms: {
+              topColor: { value: new THREE.Color(0x0077ff) },
+              bottomColor: { value: new THREE.Color(0xffffff) },
+              offset: { value: 33 },
+              exponent: { value: 0.6 },
+            },
+            vertexShader: `varying vec3 vWorldPosition; void main() { vec4 worldPosition = modelMatrix * vec4(
+                position, 1.0 ); vWorldPosition = worldPosition.xyz; gl_Position = projectionMatrix
+                * modelViewMatrix * vec4( position, 1.0 ); }`,
+            fragmentShader: ` uniform vec3 topColor; uniform vec3 bottomColor; uniform float offset; uniform float
+                exponent; varying vec3 vWorldPosition; void main() { float h = normalize(
+                vWorldPosition + offset ).y; gl_FragColor = vec4( mix( bottomColor, topColor, max(
+                pow( max( h , 0.0), exponent ), 0.0 ) ), 1.0 ); }`,
+            side: THREE.BackSide,
+          }" />
           <SphereGeometry :radius="4000" :width-segments="32" :height-segments="16" />
         </Mesh>
         <!-- ground grass -->
-        <Mesh
-          :position="{
-            y: 0,
-          }"
-          :rotation="{
-            x: -Math.PI / 2,
-          }"
-          receive-shadow
-        >
+        <Mesh :position="{
+          y: -0.2,
+        }" :rotation="{
+          x: -Math.PI / 2,
+        }" receive-shadow>
           <PlaneGeometry :width="5000" :height="5000" />
-          <BasicMaterial>
+          <PhongMaterial>
             <Texture src="/textures/grass.jpeg" :onLoad="configGroundTexture" />
-          </BasicMaterial>
+          </PhongMaterial>
         </Mesh>
         <!-- ground cement -->
-        <Mesh
-          :position="{
-            y: 0.01,
-          }"
-          :rotation="{
-            x: -Math.PI / 2,
-          }"
-          receive-shadow
-        >
-          <PlaneGeometry :width="20" :height="20" />
-          <BasicMaterial>
-            <Texture src="/textures/cement.jpeg" />
-          </BasicMaterial>
-        </Mesh>
+        <Plane :position="{
+          y: 0.01,
+        }" :rotation="{
+          x: -Math.PI / 2,
+        }" receive-shadow>
+          <PlaneGeometry :width="200" :height="200" />
+          <!-- <PhongMaterial>
+            <Texture src="/textures/cement.jpeg" :props="{
+              wrapS: THREE.RepeatWrapping,
+              wrapT: THREE.RepeatWrapping,
+            }" />
+          </PhongMaterial> -->
+          <PhongMaterial :props="{
+            map: cementTexture,
+          }" />
+        </Plane>
+        <!-- <Plane :width="200" :height="200" :rotation="{
+          x: -Math.PI / 2,
+        }" :position="{ y: 0.02 }" receive-shadow>
+          <PhongMaterial color="#313131" />
+        </Plane> -->
         <!-- Model -->
         <Group ref="selectableGroupRef">
-          <GltfModel
-            @click="onPointerEvent"
-            @load="onModelReady"
-            src="/model/储料桶.glb"
-            :position="{
-              x: 0.05,
-              y: 1,
-              z: 0.65,
-            }"
-            :props="{
-              castShadow: true,
-            }"
-          />
-          <GltfModel
-            src="/model/给料槽.glb"
-            @click="onPointerEvent"
-            @load="onModelReady"
-            :position="{
-              x: 3,
-              y: 0,
-              z: 0.6,
-            }"
-          />
-          <GltfModel
-            src="/model/给料电机.glb"
-            @click="onPointerEvent"
-            @load="onModelReady"
-            :position="{
-              x: 0,
-              y: 1,
-              z: -0.05,
-            }"
-          />
-          <GltfModel
-            src="/model/给料螺旋.glb"
-            @click="onPointerEvent"
-            @load="onModelReady"
-            :position="{
-              x: 0,
-              y: 0,
-              z: 0,
-            }"
-          />
+          <MateialBucket :onModelReady="onModelReady" :position="{
+            z: 0,
+          }"></MateialBucket>
+          <MateialBucket :onModelReady="onModelReady" :position="{
+            z: 2,
+            x: -1
+          }" :rotation="{
+            y: Math.PI / 12,
+          }"></MateialBucket>
+          <MateialBucket :onModelReady="onModelReady" :position="{
+            z: 4,
+            x: -1
+          }" :rotation="{
+            y: -Math.PI / 12,
+          }"></MateialBucket>
+          <MateialBucket :onModelReady="onModelReady" :position="{
+            z: 6,
+          }"></MateialBucket>
+          <!-- 绞龙联合 -->
+          <GltfModel @load="onModelReady" src="/model/输送管聚.glb" :position="{
+            x:2,
+            y:7.5,
+            z:7 
+          }" :props="{
+            castShadow: true,
+            receiveShadow: true,
+          }" />
+          <!-- 二楼楼板 -->
+          <Box :position="{
+            x:2,
+            y:3.55,
+            z:3
+          }" :props="{
+          }">
+            <BoxGeometry :width="8" :height="0.1" :depth="8" />
+            <PhongMaterial :props="{
+              wireframe: false,
+              flatShading: false,
+              map:texture
+            }" />
+          </Box>
+          <!-- 二楼储料 -->
+          <GltfModel @load="onModelReady" src="/model/给料槽.glb" :position="{
+            x:0,
+            y:3.55,
+            z:0.65 
+          }" :props="{
+            castShadow: true,
+            receiveShadow: true,
+          }" />
+          <GltfModel @load="onModelReady" src="/model/给料槽.glb" :position="{
+            x:-1,
+            y:3.55,
+            z:2.4 
+          }" :props="{
+            castShadow: true,
+            receiveShadow: true,
+          }" />
+          <GltfModel @load="onModelReady" src="/model/给料槽.glb" :position="{
+            x:-1,
+            y:3.55,
+            z:4.9
+          }" :props="{
+            castShadow: true,
+            receiveShadow: true,
+          }" />
+          <GltfModel @load="onModelReady" src="/model/给料槽.glb" :position="{
+            x:0,
+            y:3.55,
+            z:6.65 
+          }" :props="{
+            castShadow: true,
+            receiveShadow: true,
+          }" />
+          <!-- 三楼楼板 -->
+          <Box :props="{
+            castShadow: true,
+            receiveShadow: true,
+          }" :position="{
+            x:4,
+            y:7.10,
+            z:3
+           
+          }">
+            <BoxGeometry :width="6" :height="0.1" :depth="8" />
+            <PhongMaterial :props="{
+              wireframe: false,
+              map: texture,
+            }" />
+          </Box>
+          <GltfModel @load="onModelReady" src="/model/小料桶.glb" :position="{
+            x:4,
+            y:7.10,
+            z:5
+          }" :props="{
+            castShadow: true,
+            receiveShadow: true,
+          }" />
+
+          <GltfModel @load="onModelReady" src="/model/犁刀机.glb" :position="{
+            x:2.8,
+            y:2.6,
+            z:5
+          }" :props="{
+            castShadow: true,
+            receiveShadow: true,
+          }" />
+          <!-- 致密机 -->
+          <GltfModel @load="onModelReady" src="/model/致密机.glb" :position="{
+            x:6,
+            y:0,
+            z:4
+          }" :props="{
+            castShadow: true,
+            receiveShadow: true,
+          }" />
         </Group>
+
       </Scene>
       <!-- 后处理 -->
       <EffectComposer ref="composerRef">
         <RenderPass />
         <!-- <UnrealBloomPass :strength="1" /> -->
         <!-- <HalftonePass :radius="1" :scatter="0" /> -->
-        <FXAAPass />
+        <!-- <FXAAPass /> -->
         <EffectPass />
       </EffectComposer>
     </Renderer>
@@ -160,7 +215,6 @@
 <script setup>
 import * as THREE from "three";
 import { OutlinePass } from "three/addons/postprocessing/OutlinePass.js";
-import { ref, onMounted } from "vue";
 import {
   Box,
   EffectComposer,
@@ -173,22 +227,29 @@ import {
   Texture,
   Group,
   PlaneGeometry,
+  BoxGeometry,
   SphereGeometry,
+  PhongMaterial,
+  PhysicalMaterial,
   BasicMaterial,
   Camera,
   LambertMaterial,
   HemisphereLight,
+  AmbientLight,
   DirectionalLight,
   PointLight,
   Renderer,
   Scene,
 } from "troisjs";
+import MateialBucket from "./components/MateialBucket.vue";
 const wrapperRef = ref();
 const rendererRef = ref();
 const sceneRef = ref();
 const cameraRef = ref();
 const composerRef = ref();
 const selectableGroupRef = ref();
+const pointLightRef = ref();
+const directionalLightRef = ref();
 const moveOutlinePassRef = ref();
 
 const { width: wrapperWidth, height: wrapperHeight } = useElementSize(wrapperRef);
@@ -198,14 +259,31 @@ onMounted(() => {
   const camera = cameraRef.value.camera;
   const composer = composerRef.value.composer;
   const selectableGroup = selectableGroupRef.value.group;
+  // const pointLight = pointLightRef.value.light;
+  const directionalLight = directionalLightRef.value.light;
   const width = wrapperWidth.value;
   const height = wrapperHeight.value;
 
+  directionalLight.shadow.mapSize.width = 2048;
+  directionalLight.shadow.mapSize.height = 2048;
+  directionalLight.shadow.camera.left = -100;
+  directionalLight.shadow.camera.right = 100;
+  directionalLight.shadow.camera.top = 100;
+  directionalLight.shadow.camera.bottom = -100;
+  directionalLight.shadow.camera.far = 1000;
+  directionalLight.shadow.bias = 0;
+  // const pointLightHelper = new THREE.PointLightHelper(pointLight, 1);
+  // scene.add(pointLightHelper);
+  const directionalLightHelper = new THREE.DirectionalLightHelper(directionalLight, 5);
+  scene.add(directionalLightHelper);
+  const axesHelper = new THREE.AxesHelper(100);
+  axesHelper.position.y = 1;
+  scene.add(axesHelper);
   //雾
   scene.fog = new THREE.Fog(0xffffff, 1, 500);
 
   //render循环
-  rendererRef.value.onBeforeRender(() => {});
+  rendererRef.value.onBeforeRender(() => { });
 
   //选择时outline效果
   const moveOutlinePass = new OutlinePass(
@@ -230,8 +308,25 @@ onMounted(() => {
   moveOutlinePassRef.value = moveOutlinePass;
 });
 
-function onPointerOver({ type, over, component, intersect }) {}
+function onPointerOver({ type, over, component, intersect }) { }
 
+const textureLoader = new THREE.TextureLoader();
+const cementTexture = textureLoader.load("/textures/cement.jpeg");
+cementTexture.wrapS = THREE.RepeatWrapping;
+cementTexture.wrapT = THREE.RepeatWrapping;
+cementTexture.repeat.set(16, 16);
+const texture = textureLoader.load("/textures/floor-wood.jpg");
+texture.wrapS = THREE.RepeatWrapping;
+texture.wrapT = THREE.RepeatWrapping;
+const metalTexture = textureLoader.load("/textures/metal.jpeg");
+metalTexture.wrapS = THREE.ClampToEdgeWrapping;
+metalTexture.wrapT = THREE.ClampToEdgeWrapping;
+// metalTexture.repeat.set(64, 64);
+const defaultMaterial = new THREE.MeshLambertMaterial({
+  color: 0x3355aa,
+});
+// defaultMaterial.map = metalTexture
+defaultMaterial.side = THREE.DoubleSide; // side
 function onModelReady(model) {
   if (model.scene.traverse) {
     model.scene.traverse((o) => {
@@ -241,6 +336,8 @@ function onModelReady(model) {
         // 0 works for matte materials - change as needed
         asArray.forEach((mat) => (mat.metalness = 0.1));
       }
+      o.castShadow = true;
+      o.material = defaultMaterial;
     });
   }
 }
@@ -271,6 +368,7 @@ function configGroundTexture(texture) {
 body {
   margin: 0;
 }
+
 canvas {
   display: block;
 }
