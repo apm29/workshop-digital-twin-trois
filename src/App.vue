@@ -9,8 +9,8 @@
       maxDistance: 1000,
       maxPolarAngle: (Math.PI / 2 / 90) * 85,
     }" :pointer="{ intersectRecursive: true }" shadow :resize="true">
-      <Camera ref="cameraRef" :position="{ z: 10, x: 2, y: 5 }" :fov="75" :aspect="wrapperWidth / wrapperHeight"
-        :near="0.1" :far="5000" />
+      <Camera ref="cameraRef" :position="{ z: 20, x: 5, y: 20 }" :lookAt="{ z: 0, x: 5, y: 0 }" :fov="75"
+        :aspect="wrapperWidth / wrapperHeight" :near="0.1" :far="5000" />
       <!-- <Raycaster
         intersect-mode="frame"
         @pointerEnter="onPointerOver"
@@ -119,13 +119,12 @@
             <PhongMaterial :props="{
               wireframe: false,
               flatShading: false,
-              map:texture
             }" />
           </Box>
           <!-- 二楼储料 -->
           <GltfModel @load="onModelReady" src="/model/给料槽.glb" :position="{
             x:0,
-            y:3.55,
+            y:3.56,
             z:0.65 
           }" :props="{
             castShadow: true,
@@ -133,7 +132,7 @@
           }" />
           <GltfModel @load="onModelReady" src="/model/给料槽.glb" :position="{
             x:-1,
-            y:3.55,
+            y:3.56,
             z:2.4 
           }" :props="{
             castShadow: true,
@@ -141,7 +140,7 @@
           }" />
           <GltfModel @load="onModelReady" src="/model/给料槽.glb" :position="{
             x:-1,
-            y:3.55,
+            y:3.56,
             z:4.9
           }" :props="{
             castShadow: true,
@@ -149,7 +148,7 @@
           }" />
           <GltfModel @load="onModelReady" src="/model/给料槽.glb" :position="{
             x:0,
-            y:3.55,
+            y:3.56,
             z:6.65 
           }" :props="{
             castShadow: true,
@@ -168,7 +167,7 @@
             <BoxGeometry :width="6" :height="0.1" :depth="8" />
             <PhongMaterial :props="{
               wireframe: false,
-              map: texture,
+              opacity: 0.5
             }" />
           </Box>
           <GltfModel @load="onModelReady" src="/model/小料桶.glb" :position="{
@@ -319,27 +318,48 @@ const texture = textureLoader.load("/textures/floor-wood.jpg");
 texture.wrapS = THREE.RepeatWrapping;
 texture.wrapT = THREE.RepeatWrapping;
 const metalTexture = textureLoader.load("/textures/metal.jpeg");
-metalTexture.wrapS = THREE.ClampToEdgeWrapping;
-metalTexture.wrapT = THREE.ClampToEdgeWrapping;
-// metalTexture.repeat.set(64, 64);
+metalTexture.wrapS = THREE.MirroredRepeatWrapping;
+metalTexture.wrapT = THREE.MirroredRepeatWrapping;
+metalTexture.repeat.set(4, 4);
+const pvcTexture = textureLoader.load("/textures/pvc.jpeg");
+pvcTexture.wrapS = THREE.RepeatWrapping;
+pvcTexture.wrapT = THREE.RepeatWrapping;
+
 const defaultMaterial = new THREE.MeshLambertMaterial({
-  color: 0x3355aa,
+  // color: 0x3355aa,
 });
-// defaultMaterial.map = metalTexture
+defaultMaterial.map = pvcTexture
 defaultMaterial.side = THREE.DoubleSide; // side
 function onModelReady(model) {
-  if (model.scene.traverse) {
-    model.scene.traverse((o) => {
-      if (o.isMesh) {
-        // handle both multiple and single materials
-        const asArray = Array.isArray(o.material) ? o.material : [o.material];
-        // 0 works for matte materials - change as needed
-        asArray.forEach((mat) => (mat.metalness = 0.1));
-      }
-      o.castShadow = true;
-      o.material = defaultMaterial;
-    });
-  }
+  // if (model.scene.traverse) {
+  //   model.scene.traverse((o) => {
+  //     if (o.isMesh) {
+  //       // handle both multiple and single materials
+  //       const asArray = Array.isArray(o.material) ? o.material : [o.material];
+  //       // 0 works for matte materials - change as needed
+  //       asArray.forEach((mat) => (mat.metalness = 1));
+  //       o.castShadow = true;
+  //       o.material.side = THREE.DoubleSide;
+  //       console.log(o.material.opacity);
+  //       o.material.map = pvcTexture;
+  //     }
+  //     console.log(o);
+
+  //   });
+  // }
+  console.log(model);
+  model.scene.traverse((obj) => {
+    if (obj.isMesh) {
+      //把材质替换为Lambert
+      const oldTexture = obj.material.map
+      const defaultMaterial = new THREE.MeshLambertMaterial({
+        // color: 0x3355aa,
+      });
+      obj.material = defaultMaterial
+      obj.material.map = oldTexture
+      obj.material.side = THREE.DoubleSide;
+    }
+  })
 }
 
 const intersects = reactive([]);
