@@ -11,11 +11,7 @@
     }" :pointer="{ intersectRecursive: true }" shadow :resize="true">
       <Camera ref="cameraRef" :position="{ z: 20, x: 5, y: 20 }" :lookAt="{ z: 0, x: 5, y: 0 }" :fov="75"
         :aspect="wrapperWidth / wrapperHeight" :near="0.1" :far="5000" />
-      <!-- <Raycaster
-        intersect-mode="frame"
-        @pointerEnter="onPointerOver"
-        @click="onPointerEvent"
-      /> -->
+      <!-- <Raycaster @click="onPointerEvent" /> -->
       <Scene ref="sceneRef" background="#030303">
         <AmbientLight color="#808080" :position="{ x: 0, y: 20, z: 0 }" />
         <DirectionalLight ref="directionalLightRef" cast-shadow color="#ffffff" :position="{ x: 100, y: 300, z: 100 }"
@@ -81,26 +77,29 @@
         </Plane> -->
         <!-- Model -->
         <Group ref="selectableGroupRef">
-          <MateialBucket :onModelReady="onModelReady" :position="{
+          <MateialBucket @click="onPointerEvent" :onModelReady="onModelReady" :position="{
             z: 0,
-          }"></MateialBucket>
-          <MateialBucket :onModelReady="onModelReady" :position="{
+          }">
+          </MateialBucket>
+
+          <MateialBucket @click="onPointerEvent" :onModelReady="onModelReady" :position="{
             z: 2,
             x: -1
           }" :rotation="{
             y: Math.PI / 12,
-          }"></MateialBucket>
-          <MateialBucket :onModelReady="onModelReady" :position="{
+          }">
+          </MateialBucket>
+          <MateialBucket @click="onPointerEvent" :onModelReady="onModelReady" :position="{
             z: 4,
             x: -1
           }" :rotation="{
             y: -Math.PI / 12,
           }"></MateialBucket>
-          <MateialBucket :onModelReady="onModelReady" :position="{
+          <MateialBucket @click="onPointerEvent" :onModelReady="onModelReady" :position="{
             z: 6,
           }"></MateialBucket>
           <!-- 绞龙联合 -->
-          <GltfModel @load="onModelReady" src="/model/输送管聚.glb" :position="{
+          <GltfModel @click="onPointerEvent" @load="onModelReady" src="/model/输送管聚.glb" :position="{
             x:2,
             y:7.5,
             z:7 
@@ -122,7 +121,7 @@
             }" />
           </Box>
           <!-- 二楼储料 -->
-          <GltfModel @load="onModelReady" src="/model/给料槽.glb" :position="{
+          <GltfModel @click="onPointerEvent" @load="onModelReady" src="/model/给料槽.glb" :position="{
             x:0,
             y:3.56,
             z:0.65 
@@ -130,7 +129,7 @@
             castShadow: true,
             receiveShadow: true,
           }" />
-          <GltfModel @load="onModelReady" src="/model/给料槽.glb" :position="{
+          <GltfModel @click="onPointerEvent" @load="onModelReady" src="/model/给料槽.glb" :position="{
             x:-1,
             y:3.56,
             z:2.4 
@@ -138,7 +137,7 @@
             castShadow: true,
             receiveShadow: true,
           }" />
-          <GltfModel @load="onModelReady" src="/model/给料槽.glb" :position="{
+          <GltfModel @click="onPointerEvent" @load="onModelReady" src="/model/给料槽.glb" :position="{
             x:-1,
             y:3.56,
             z:4.9
@@ -146,7 +145,7 @@
             castShadow: true,
             receiveShadow: true,
           }" />
-          <GltfModel @load="onModelReady" src="/model/给料槽.glb" :position="{
+          <GltfModel @click="onPointerEvent" @load="onModelReady" src="/model/给料槽.glb" :position="{
             x:0,
             y:3.56,
             z:6.65 
@@ -170,7 +169,7 @@
               opacity: 0.5
             }" />
           </Box>
-          <GltfModel @load="onModelReady" src="/model/小料桶.glb" :position="{
+          <GltfModel @click="onPointerEvent" @load="onModelReady" src="/model/小料桶.glb" :position="{
             x:4,
             y:7.10,
             z:5
@@ -179,7 +178,7 @@
             receiveShadow: true,
           }" />
 
-          <GltfModel @load="onModelReady" src="/model/犁刀机.glb" :position="{
+          <GltfModel @click="onPointerEvent" @load="onModelReady" src="/model/犁刀机.glb" :position="{
             x:2.8,
             y:2.6,
             z:5
@@ -188,7 +187,7 @@
             receiveShadow: true,
           }" />
           <!-- 致密机 -->
-          <GltfModel @load="onModelReady" src="/model/致密机.glb" :position="{
+          <GltfModel @click="onPointerEvent" @load="onModelReady" src="/model/致密机.glb" :position="{
             x:6,
             y:0,
             z:4
@@ -214,8 +213,10 @@
 <script setup>
 import * as THREE from "three";
 import { OutlinePass } from "three/addons/postprocessing/OutlinePass.js";
+import Stats from "three/addons/libs/stats.module.js";
 import {
   Box,
+  Object3D,
   EffectComposer,
   UnrealBloomPass,
   FXAAPass,
@@ -281,8 +282,13 @@ onMounted(() => {
   //雾
   scene.fog = new THREE.Fog(0xffffff, 1, 500);
 
+  //stats
+  const stats = Stats()
+  wrapperRef.value.appendChild(stats.domElement)
   //render循环
-  rendererRef.value.onBeforeRender(() => { });
+  rendererRef.value.onBeforeRender(() => {
+    stats.update();
+  });
 
   //选择时outline效果
   const moveOutlinePass = new OutlinePass(
@@ -331,23 +337,7 @@ const defaultMaterial = new THREE.MeshLambertMaterial({
 defaultMaterial.map = pvcTexture
 defaultMaterial.side = THREE.DoubleSide; // side
 function onModelReady(model) {
-  // if (model.scene.traverse) {
-  //   model.scene.traverse((o) => {
-  //     if (o.isMesh) {
-  //       // handle both multiple and single materials
-  //       const asArray = Array.isArray(o.material) ? o.material : [o.material];
-  //       // 0 works for matte materials - change as needed
-  //       asArray.forEach((mat) => (mat.metalness = 1));
-  //       o.castShadow = true;
-  //       o.material.side = THREE.DoubleSide;
-  //       console.log(o.material.opacity);
-  //       o.material.map = pvcTexture;
-  //     }
-  //     console.log(o);
-
-  //   });
-  // }
-  console.log(model);
+  // console.log(model);
   model.scene.traverse((obj) => {
     if (obj.isMesh) {
       //把材质替换为Lambert
@@ -368,7 +358,6 @@ function onPointerEvent({ component, intersect }) {
   if (intersects.length === 0) {
     setTimeout(() => {
       moveOutlinePassRef.value.selectedObjects = [intersects[0]];
-      console.log(intersects[0]);
       intersects.splice(0, intersects.length);
     }, 200);
   }

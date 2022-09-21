@@ -1,9 +1,10 @@
 <template>
-  <Group ref="selectableGroupRef" v-bind="$attrs">
-    <GltfModel v-for="model of models" @load="onModelReady" :src="model.path" :position="model.position" :props="{
-      castShadow: true,
-      receiveShadow: true,
-    }" />
+  <Group ref="selectableGroupRef">
+    <GltfModel @click="($event)=>emits('click',$event)" v-for="model of models" @load="onModelReady" :src="model.path"
+      :position="model.position" :props="{
+        castShadow: true,
+        receiveShadow: true,
+      }" />
   </Group>
 </template>
 
@@ -16,6 +17,8 @@ defaultMaterial.side = THREE.DoubleSide; // side
 defineProps({
   onModelReady: Function
 })
+
+const emits = defineEmits(['click'])
 
 const models = ref([
   {
