@@ -205,6 +205,7 @@
         <!-- <HalftonePass :radius="1" :scatter="0" /> -->
         <!-- <FXAAPass /> -->
         <EffectPass />
+        <SMAAPass />
       </EffectComposer>
     </Renderer>
   </div>
@@ -220,6 +221,7 @@ import {
   EffectComposer,
   UnrealBloomPass,
   FXAAPass,
+  SMAAPass,
   EffectPass,
   RenderPass,
   Mesh,
