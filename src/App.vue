@@ -155,6 +155,11 @@
             castShadow: true,
             receiveShadow: true,
           }" />
+          <SpriteCanvasText text="给料槽" :position="{
+            x:1,
+            y:5,
+            z:2.5
+          }"></SpriteCanvasText>
           <!-- 三楼楼板 -->
           <Box :props="{
             castShadow: true,
@@ -188,6 +193,11 @@
             castShadow: true,
             receiveShadow: true,
           }" />
+          <SpriteCanvasText text="犁刀机" :position="{
+            x:5.5,
+            y:6,
+            z:3
+          }"></SpriteCanvasText>
           <!-- 致密机 -->
           <GltfModel @click="onPointerEvent" @load="onModelReady" src="/model/致密机.glb" :position="{
             x:6,
@@ -198,6 +208,12 @@
             receiveShadow: true,
           }" />
         </Group>
+
+        <SpriteCanvasText text="致密机" :position="{
+          x:9,
+          y:4,
+          z:2.5
+        }"></SpriteCanvasText>
 
       </Scene>
       <!-- 后处理 -->
@@ -249,6 +265,7 @@ import {
   Scene,
 } from "troisjs";
 import MateialBucket from "./components/MateialBucket.vue";
+import SpriteCanvasText from "./components/SpriteCanvasText.vue";
 const wrapperRef = ref();
 const rendererRef = ref();
 const sceneRef = ref();
