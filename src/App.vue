@@ -16,8 +16,8 @@
         <AmbientLight color="#808080" :position="{ x: 0, y: 20, z: 0 }" />
         <DirectionalLight ref="directionalLightRef" cast-shadow color="#ffffff" :position="{ x: 100, y: 300, z: 100 }"
           :shadowMapSize="{
-            width: 512,
-            height: 512,
+            width: 2048,
+            height: 2048,
           }" />
         <!-- <PointLight ref="pointLightRef" :shadow-map-size="{ width: 1024, height: 1024 }"
           :position="{ x: 0, y: 500, z: 0 }" />
@@ -113,6 +113,8 @@
             y:3.55,
             z:3
           }" :props="{
+            castShadow: true,
+            receiveShadow: true,
           }">
             <BoxGeometry :width="8" :height="0.1" :depth="8" />
             <PhongMaterial :props="{
@@ -221,7 +223,10 @@ import {
   EffectComposer,
   UnrealBloomPass,
   FXAAPass,
+  FilmPass,
+  BokehPass,
   SMAAPass,
+  SSAOPass,
   EffectPass,
   RenderPass,
   Mesh,
@@ -266,18 +271,18 @@ onMounted(() => {
   const width = wrapperWidth.value;
   const height = wrapperHeight.value;
 
-  directionalLight.shadow.mapSize.width = 2048;
-  directionalLight.shadow.mapSize.height = 2048;
-  directionalLight.shadow.camera.left = -100;
-  directionalLight.shadow.camera.right = 100;
-  directionalLight.shadow.camera.top = 100;
-  directionalLight.shadow.camera.bottom = -100;
+  // directionalLight.shadow.mapSize.width = 2048;
+  // directionalLight.shadow.mapSize.height = 2048;
+  directionalLight.shadow.camera.left = -30;
+  directionalLight.shadow.camera.right = 30;
+  directionalLight.shadow.camera.top = 30;
+  directionalLight.shadow.camera.bottom = -30;
   directionalLight.shadow.camera.far = 1000;
   directionalLight.shadow.bias = 0;
   // const pointLightHelper = new THREE.PointLightHelper(pointLight, 1);
   // scene.add(pointLightHelper);
-  const directionalLightHelper = new THREE.DirectionalLightHelper(directionalLight, 5);
-  scene.add(directionalLightHelper);
+  // const directionalLightHelper = new THREE.DirectionalLightHelper(directionalLight, 5);
+  // scene.add(directionalLightHelper);
   const axesHelper = new THREE.AxesHelper(100);
   axesHelper.position.y = 1;
   scene.add(axesHelper);
@@ -350,6 +355,7 @@ function onModelReady(model) {
       obj.material = defaultMaterial
       obj.material.map = oldTexture
       obj.material.side = THREE.DoubleSide;
+      obj.castShadow = true;
     }
   })
 }
